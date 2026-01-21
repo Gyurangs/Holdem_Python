@@ -1,4 +1,6 @@
 class Player:
+    __hash__ = object.__hash__
+
     def __init__(self, name, chips=2000,    ai=None):
         self.name = name
         self.chips = chips
