@@ -1,7 +1,7 @@
 # Holdem_Python
 
 <div align="center">
-  <img src="" width="300" alt="Holdem Logo" />
+  <img src="https://github.com/user-attachments/assets/f0b1031d-8308-472f-a34d-787127b10584" width="300" alt="Holdem Logo" />
 </div>
 
 ## 01. 프로젝트에 대한 정보
@@ -9,14 +9,10 @@
 ### (1) 프로젝트 제목
 - Holdem_Python
 
-### (2) 프로젝트 로고나 이미지
-- 위 이미지 사용 (가로 300, 가운데 정렬)
-- 로고 경로: `assets/README_logo.png` (원하는 이미지로 교체 가능)
+### (2) 프로젝트 정보 (개발 기간)
+- 2026.01.17 ~ 2026.01.25
 
-### (3) 프로젝트 정보 (개발 기간)
-- 2026.01.XX ~ 2026.01.XX
-
-### (4) 프로젝트 소개
+### (3) 프로젝트 소개
 - PySide6 기반의 데스크톱 텍사스 홀덤 게임입니다.
 - 1인(휴먼) + AI 플레이어로 기본 규칙을 빠르게 즐길 수 있습니다.
 
