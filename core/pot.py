@@ -1,6 +1,7 @@
 class Pot:
     def __init__(self):
-        self.bets = {}  # player -> total bet (누적)
+        # player -> 누적 베팅
+        self.bets = {}
 
     def add_bet(self, player, amount):
         if amount <= 0:
@@ -14,16 +15,14 @@ class Pot:
 
     @property
     def total(self):
-        # 전체 팟(누적 베팅 총합)
         return sum(self.bets.values())
 
     def total_chips(self):
-        # (선택) 예전 코드 호환용
         return self.total
 
     def build_pots(self):
         """
-        return: list of (amount, eligible_players)
+        반환: (금액, 자격 있는 플레이어 목록) 튜플 리스트
         """
         pots = []
         remaining = self.bets.copy()
@@ -35,7 +34,6 @@ class Pot:
             pot_amount = min_bet * len(eligible)
             pots.append((pot_amount, eligible))
 
-            # 차감
             for p in eligible:
                 remaining[p] -= min_bet
                 if remaining[p] == 0:

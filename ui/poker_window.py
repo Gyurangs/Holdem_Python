@@ -1,14 +1,14 @@
-# ui/poker_window.py
+                    
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton,
     QVBoxLayout, QHBoxLayout, QSpinBox,
     QFrame, QMessageBox, QSizePolicy,
-    QGraphicsOpacityEffect
+    QGraphicsOpacityEffect, QGridLayout
 )
 from PySide6.QtGui import QPixmap, QKeySequence, QColor, QShortcut
-from PySide6.QtCore import Qt, QTimer, QPoint, QPropertyAnimation, QDateTime, QRect
+from PySide6.QtCore import Qt, QTimer, QPoint, QPropertyAnimation, QDateTime, QRect, QSize
 
 from ui.fx import GlowFilter
 
@@ -53,7 +53,7 @@ class SeatWidget(QWidget):
             QWidget { border: 2px solid rgba(255,215,0,180); }
         """
 
-        # Avatar
+                
         self.avatar = QLabel(self)
         self.avatar.setFixedSize(50, 50)
         self.avatar.setAlignment(Qt.AlignCenter)
@@ -78,8 +78,10 @@ class SeatWidget(QWidget):
         top_row.addWidget(self.avatar)
         top_row.addLayout(top_info)
         top_row.addStretch()
+        self.info_row_widget = QWidget(self)
+        self.info_row_widget.setLayout(top_row)
 
-        # Cards
+               
         self.card1 = QLabel(self)
         self.card2 = QLabel(self)
         for c in (self.card1, self.card2):
@@ -95,25 +97,26 @@ class SeatWidget(QWidget):
         cards_row.setContentsMargins(10, 6, 10, 8)
         cards_row.addWidget(self.card1)
         cards_row.addWidget(self.card2)
+        self.cards_row_widget = QWidget(self)
+        self.cards_row_widget.setLayout(cards_row)
 
         self.action_label = QLabel("—", self)
         self.action_label.setAlignment(Qt.AlignCenter)
         self.action_label.setStyleSheet("font-size: 12px; font-weight: 900; color: rgba(255,255,255,210);")
         self.action_label.setContentsMargins(0, 0, 0, 10)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
-        root.addLayout(top_row)
-        root.addLayout(cards_row)
-        root.addWidget(self.action_label)
+        self._side_info = False
+        self._grid = QGridLayout(self)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setSpacing(0)
+        self._apply_layout()
 
         self._apply_style()
         self.set_card_size(self.card_w, self.card_h)
         self.set_cards(None, None, back=True)
         self._set_card_dimmed(False)
 
-        # Bubble (parented to table surface so it won't be clipped)
+                                                                   
         self.bubble = QLabel(self.parent())
         self.bubble.setWordWrap(True)
         self.bubble.setVisible(False)
@@ -131,13 +134,13 @@ class SeatWidget(QWidget):
             }
         """)
 
-        # Bubble opacity animation (shadow와 effect 충돌 방지 위해 opacity만)
+                                                                     
         self._bubble_op = QGraphicsOpacityEffect(self.bubble)
         self.bubble.setGraphicsEffect(self._bubble_op)
         self._bubble_anim = QPropertyAnimation(self._bubble_op, b"opacity", self)
         self._bubble_anim.setDuration(220)
 
-        self._bubble_anim_mode = None  # "in" or "out"
+        self._bubble_anim_mode = None                 
         self._bubble_anim.finished.connect(self._on_bubble_anim_finished)
 
         self._bubble_timer = QTimer(self)
@@ -154,6 +157,39 @@ class SeatWidget(QWidget):
     def _apply_style(self):
         base = self._qss_folded if self.folded else self._qss_normal
         self.setStyleSheet(base + (self._qss_highlight_border if self._highlighted else ""))
+
+    def _apply_layout(self):
+        while self._grid.count():
+            item = self._grid.takeAt(0)
+            if item.widget():
+                item.widget().setParent(self)
+
+        if self._side_info:
+            self._grid.addWidget(self.cards_row_widget, 0, 0, 1, 1)
+            self._grid.addWidget(self.info_row_widget, 0, 1, 1, 1)
+            self._grid.addWidget(self.action_label, 1, 0, 1, 2, alignment=Qt.AlignCenter)
+            self._grid.setColumnStretch(0, 2)
+            self._grid.setColumnStretch(1, 1)
+        else:
+            self._grid.addWidget(self.info_row_widget, 0, 0, 1, 2)
+            self._grid.addWidget(self.cards_row_widget, 1, 0, 1, 2)
+            self._grid.addWidget(self.action_label, 2, 0, 1, 2, alignment=Qt.AlignCenter)
+            self._grid.setColumnStretch(0, 1)
+            self._grid.setColumnStretch(1, 1)
+
+    def set_side_info(self, side: bool):
+        side = bool(side)
+        if self._side_info == side:
+            return
+        self._side_info = side
+        self._apply_layout()
+
+    def preferred_size(self) -> QSize:
+        if self._side_info:
+            w = self.card_w * 2 + 72 + 150
+            h = max(self.card_h + 40, 120)
+            return QSize(w, h)
+        return QSize(self.card_w * 2 + 72, self.card_h + 118)
 
     def _set_card_dimmed(self, dim: bool):
         self._op1.setOpacity(0.28 if dim else 1.0)
@@ -340,7 +376,7 @@ class PokerWindow(QWidget):
         self.table_surface = QWidget(self.table_frame)
         self.table_surface.setGeometry(0, 0, self.table_frame.width(), self.table_frame.height())
 
-        # Community cards (5)
+                             
         self.community_labels = []
         for _ in range(5):
             lbl = QLabel(self.table_surface)
@@ -348,7 +384,7 @@ class PokerWindow(QWidget):
             lbl.setVisible(False)
             self.community_labels.append(lbl)
 
-        # HUD (top-right)
+                         
         self.hud = QFrame(self.table_surface)
         self.hud.setStyleSheet("""
             QFrame {
@@ -375,7 +411,7 @@ class PokerWindow(QWidget):
         hud_layout.addWidget(self.hud_tocall)
         hud_layout.addWidget(self.hud_blinds)
 
-        # Action panel (bottom-center)
+                                      
         self.action_panel = QFrame(self.table_surface)
         self.action_panel.setStyleSheet("""
             QFrame {
@@ -432,7 +468,7 @@ class PokerWindow(QWidget):
         action_layout.addWidget(self.allin_btn)
 
     def _install_glow(self):
-        # ✅ 인게임 포커스/호버 glow
+                           
         for w in (self.fold_btn, self.call_btn, self.raise_spin, self.raise_btn, self.allin_btn):
             w.installEventFilter(self._glow)
 
@@ -457,7 +493,9 @@ class PokerWindow(QWidget):
     def configure_table(self, num_players: int):
         self.num_players = max(2, min(5, int(num_players)))
 
-        scale = max(0.65, 1.0 - 0.12 * (self.num_players - 2))
+        scale = max(0.70, 1.0 - 0.10 * (self.num_players - 2))
+        if self.num_players == 5:
+            scale += 0.03
         self.card_w = int(BASE_CARD_W * scale)
         self.card_h = int(BASE_CARD_H * scale)
 
@@ -466,10 +504,11 @@ class PokerWindow(QWidget):
             s.deleteLater()
         self.seats.clear()
 
-        for _ in range(self.num_players):
+        for i in range(self.num_players):
             seat = SeatWidget(self.table_surface)
             seat.set_card_size(self.card_w, self.card_h)
-            seat.setFixedSize(self.card_w * 2 + 72, self.card_h + 118)
+            seat.set_side_info(i == 0)
+            seat.setFixedSize(seat.preferred_size())
             seat.show()
             self.seats.append(seat)
 
@@ -493,22 +532,17 @@ class PokerWindow(QWidget):
         w = self.table_surface.width()
         h = self.table_surface.height()
 
-        bottom_y = 0.74
-        try:
-            if self.action_panel.isVisible():
-                panel_h = self.action_panel.height()
-                shift = min(0.14, panel_h / max(1, h) * 1.2)
-                bottom_y = 0.74 - shift
-        except Exception:
-            bottom_y = 0.74
-
-        anchors = [(0.50, bottom_y), (0.30, 0.14), (0.70, 0.14), (0.12, 0.52), (0.88, 0.52)]
+        anchors = [(0.50, 0.74), (0.30, 0.14), (0.70, 0.14), (0.12, 0.52), (0.88, 0.52)]
         anchors = [anchors[0]] + anchors[1:][: self.num_players - 1]
 
         margin = 12
-        for seat, (ax, ay) in zip(self.seats, anchors):
+        for i, (seat, (ax, ay)) in enumerate(zip(self.seats, anchors)):
             x = int(w * ax - seat.width() / 2)
-            y = int(h * ay - seat.height() / 2)
+            if i == 0 and self.action_panel.isVisible():
+                panel_h = self.action_panel.height()
+                y = h - panel_h - seat.height() - 18
+            else:
+                y = int(h * ay - seat.height() / 2)
             x = max(margin, min(x, w - seat.width() - margin))
             y = max(margin, min(y, h - seat.height() - margin))
             seat.move(x, y)
@@ -604,7 +638,8 @@ class PokerWindow(QWidget):
             self.hud_blinds.setText(f"Blinds: {sb}/{bb}")
 
         player_chips = self.get_player_chips()
-        min_raise = max(10, to_call)
+        base = int(bb) if bb is not None else 10
+        min_raise = max(base, to_call)
         self.raise_spin.setMinimum(min_raise)
         self.raise_spin.setMaximum(max(min_raise, player_chips))
 

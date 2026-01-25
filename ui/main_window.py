@@ -1,4 +1,4 @@
-# ui/main_window.py
+                   
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 from ui.poker_window import PokerWindow
 from ui.home_screen import HomeScreen
@@ -31,14 +31,14 @@ class MainWindow(QMainWindow):
     def show_action(self, text: str):
         self.poker_screen.append_action_log(text)
 
-    # ✅ HomeScreen이 넘기는 포맷과 100% 동일
+                                   
     def start_game(self, ai_count: int, difficulty: str, start_chips: int, bb: int):
         print("🎮 GAME START", ai_count, difficulty, start_chips, "BB", bb)
 
-        # ✅ 게임 설정(= SB는 내부에서 BB/2로 자동)
+                                      
         self.game.configure(ai_count=ai_count, difficulty=difficulty, start_chips=start_chips, bb=bb)
 
-        # ✅ UI 초기화/좌석 재구성
+                         
         self.poker_screen.configure_table(len(self.game.players))
         self.poker_screen.reset_ui_for_new_game(self.game.players)
         self.update_cards(self.game.players, self.game.community_cards, reveal_ai=False)

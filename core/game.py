@@ -1,4 +1,3 @@
-# core/game.py
 from __future__ import annotations
 
 from core.game_state import GameState
@@ -9,9 +8,8 @@ from core.betting_round import BettingRound
 from players.ai_easy import EasyAI
 from players.ai_normal import NormalAI
 from players.ai_hard import HardAI
-from core.hand_evaluator import evaluate_7cards
+from core.hand_evaluator import evaluate_7cards, hand_name
 from PySide6.QtCore import QTimer
-
 
 class HoldemGame:
     def __init__(self, human_action):
@@ -33,12 +31,14 @@ class HoldemGame:
         self.players: list[Player] = []
         self.state = GameState.NEW_HAND
 
-        # ✅ 런아웃/공개 플래그
-        self.runout_mode = False          # 올인/베팅 불가면 True
-        self.reveal_ai = False            # UI에서 AI 카드 공개 여부(딜레이 포함)
-        self._waiting_next_hand = False   # 3초 대기 중
+        # 올인으로 추가 베팅이 불가능한 상태인지 여부
+        self.runout_mode = False
+        # UI에서 AI 카드 공개 여부
+        self.reveal_ai = False
+        # 다음 핸드 시작까지 대기 중인지 여부
+        self._waiting_next_hand = False
 
-        # ✅ 기본값: Normal / 1000 / BB=20 (SB=10)
+        # 기본 설정
         self.configure(ai_count=1, difficulty="Normal", start_chips=1000, bb=20)
 
     def stop(self):
@@ -74,7 +74,6 @@ class HoldemGame:
         self.gui.update_cards(self.players, self.community_cards, reveal_ai=self.reveal_ai)
         self._sync_ui(to_call=to_call)
 
-    # ✅ Home/Window와 포맷 완전 일치
     def configure(self, ai_count: int, difficulty: str, start_chips: int, bb: int):
         ai_count = max(1, min(4, int(ai_count)))
         start_chips = max(1, int(start_chips))
@@ -114,9 +113,7 @@ class HoldemGame:
             self.timer.stop()
         self.timer.start(250)
 
-    # ==================================================
-    # GAME LOOP
-    # ==================================================
+    # 게임 루프
     def game_loop(self):
         if self._waiting_next_hand:
             return
@@ -189,9 +186,7 @@ class HoldemGame:
             self.end_hand()
             return
 
-    # ==================================================
-    # HAND FLOW
-    # ==================================================
+    # 핸드 진행
     def new_hand(self):
         self.runout_mode = False
         self.reveal_ai = False
@@ -240,7 +235,8 @@ class HoldemGame:
         self._emit(f"{bbp.name} POSTS BB {bb_amt}")
 
         self.betting = BettingRound(players=self.players, start_index=first_to_act, big_blind=self.big_blind)
-        self.betting.current_bet = bb_amt  # 실제 BB
+        # 프리플랍 현재 베팅은 BB
+        self.betting.current_bet = bb_amt
 
         human = self.players[0]
         self._refresh_ui(to_call=max(0, self.betting.current_bet - human.current_bet))
@@ -278,7 +274,7 @@ class HoldemGame:
         for p in self.players:
             p.current_bet = 0
 
-        # HU: BB가 먼저 / 3+ : SB(딜러 왼쪽) 먼저
+        # 2인: BB 먼저, 3인 이상: SB(딜러 왼쪽) 먼저
         start_index = (self.dealer_index + 1) % n
         self.betting = BettingRound(players=self.players, start_index=start_index, big_blind=self.big_blind)
         self.betting.current_bet = 0
@@ -289,9 +285,7 @@ class HoldemGame:
         if self.gui:
             self.gui.poker_screen.highlight_current_seat(self.players[start_index].name)
 
-    # ==================================================
-    # RUNOUT
-    # ==================================================
+    # 런아웃
     def _no_more_betting_possible(self) -> bool:
         alive = [p for p in self.players if not p.folded]
         if len(alive) <= 1:
@@ -310,13 +304,10 @@ class HoldemGame:
         self._emit("ALL-IN / No more betting → Running out board")
         self._refresh_ui(to_call=0)
 
-    # ==================================================
-    # BETTING
-    # ==================================================
+    # 베팅
     def betting_action(self) -> bool:
         br = self.betting
 
-        # 승리(폴드로 1명 남음)
         alive = [p for p in self.players if not p.folded]
         if len(alive) == 1:
             winner = alive[0]
@@ -331,9 +322,8 @@ class HoldemGame:
             self.state = GameState.END_HAND
             return False
 
-        # 라운드 종료
         if br.all_acted_or_all_in():
-            # 다음 스트리트로 넘어갈 때 bet 리셋
+            # 다음 스트리트로 넘어가기 전 현재 베팅 리셋
             for p in self.players:
                 p.current_bet = 0
             self.waiting_for_human = False
@@ -348,7 +338,6 @@ class HoldemGame:
         if self.gui:
             self.gui.poker_screen.highlight_current_seat(player.name)
 
-        # 폴드/올인 스킵
         if player.folded or player.all_in:
             br.next_player()
             return False
@@ -356,7 +345,6 @@ class HoldemGame:
         to_call = br.current_bet - player.current_bet
         human = self.players[0]
 
-        # AI
         if player.ai:
             if self.gui:
                 self.gui.poker_screen.set_actions_enabled(False)
@@ -378,18 +366,16 @@ class HoldemGame:
                 self._emit(f"{player.name} CALLS {to_call}")
 
             elif action == "raise":
-                # amount는 "이번 턴에 넣을 칩"(콜 포함)로 취급
+
                 self.place_bet(player, int(amount))
                 self._emit(f"{player.name} RAISES TO {br.current_bet}")
 
             br.next_player()
 
-            # 다음 플레이어 기준 to_call 갱신
             next_to_call = max(0, br.current_bet - human.current_bet)
             self._refresh_ui(to_call=next_to_call)
             return False
 
-        # Human
         if not self.waiting_for_human:
             self.waiting_for_human = True
             if self.gui:
@@ -436,7 +422,7 @@ class HoldemGame:
             return
 
         if action == "raise":
-            # amount는 "이번 턴에 넣을 칩"(콜 포함)로 취급
+
             if amount <= to_call:
                 self.place_bet(player, to_call)
                 self._emit(f"{player.name} CALLS {to_call}")
@@ -447,6 +433,7 @@ class HoldemGame:
             return
 
     def place_bet(self, player, amount):
+        # amount는 이번 액션에서 넣는 총액(콜 포함)
         br = self.betting
 
         before_round_bet = br.current_bet
@@ -458,7 +445,6 @@ class HoldemGame:
 
         br.mark_acted(player)
 
-        # 라운드 최고 베팅 갱신
         if player.current_bet > before_round_bet:
             raise_size = player.current_bet - before_round_bet
             br.min_raise = max(br.min_raise, raise_size)
@@ -471,15 +457,13 @@ class HoldemGame:
         if player.chips == 0:
             player.all_in = True
 
-        if self._no_more_betting_possible():
-            self._enter_runout_mode()
-
-    # ==================================================
-    # SHOWDOWN / END
-    # ==================================================
+    # 쇼다운 / 종료
     def showdown(self):
         active = [p for p in self.players if not p.folded]
         scores = {p: evaluate_7cards(p.hole_cards + self.community_cards) for p in active}
+
+        for p in active:
+            self._emit(f"{p.name} hand: {hand_name(scores[p])}")
 
         pots = self.pot.build_pots()
         for pot_amount, eligible in pots:
@@ -491,6 +475,13 @@ class HoldemGame:
                 w.chips += share
                 self._emit(f"{w.name} wins {share}")
 
+        # 마지막 말풍선에 WIN/LOSE 표시
+        winners_all = {p for pot_amount, eligible in pots
+                       for p in eligible
+                       if not p.folded and scores[p] == max(scores[x] for x in eligible if not x.folded)}
+        for p in active:
+            self._emit(f"{p.name} {'WIN' if p in winners_all else 'LOSE'}")
+
         self.pot.reset()
         self.reveal_ai = True
         if self.gui:
@@ -498,12 +489,11 @@ class HoldemGame:
         self._refresh_ui(to_call=0)
 
     def end_hand(self):
-        # ✅ 여기서 "카드 공개 유지" + "3초 대기"
+        # ?? ??? ??? ? ?? ???? ??
         if self.gui:
             self.gui.poker_screen.set_actions_enabled(False)
             self.gui.poker_screen.set_status_text("Next hand in 3s…")
 
-        # bust 처리(토너먼트식)
         human = self.players[0]
         if human.chips <= 0:
             self.stop()
@@ -522,7 +512,6 @@ class HoldemGame:
 
         self.dealer_index = (self.dealer_index + 1) % len(self.players)
 
-        # ✅ 딜레이 동안 상태 고정(공개 유지)
         self._schedule_next_hand(delay_ms=3000)
 
     def _schedule_next_hand(self, delay_ms=3000):

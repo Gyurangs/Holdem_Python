@@ -1,7 +1,8 @@
 class Card:
     def __init__(self, rank, suit):
-        self.rank = rank    # 2~14
-        self.suit = suit    # 'S', 'H', 'D', 'C'
+        # rank: 2~14, suit: 'S' | 'H' | 'D' | 'C'
+        self.rank = rank
+        self.suit = suit
 
     def __repr__(self):
         rank_map = {11: 'J', 12: 'Q', 13: 'K', 14: 'A'}

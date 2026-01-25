@@ -12,8 +12,6 @@ human_action = HumanAction()
 game = HoldemGame(human_action)
 
 window = MainWindow(game, human_action)
-
-# GUI를 게임에 연결
 game.gui = window
 
 window.show()

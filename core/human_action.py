@@ -1,6 +1,7 @@
 class HumanAction:
     def __init__(self):
-        self.action = None   # "fold" | "call" | "raise"
+        # action: "fold" | "call" | "raise"
+        self.action = None
         self.amount = 0
 
     def set(self, action, amount=0):

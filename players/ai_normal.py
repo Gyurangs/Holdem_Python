@@ -1,4 +1,4 @@
-# players/ai_normal.py
+                      
 import random
 
 class NormalAI:
@@ -19,7 +19,7 @@ class NormalAI:
         elif high >= 11:
             strength = 1
 
-        # 블러핑
+        # 가끔 블러핑 레이즈
         if to_call == 0 and random.random() < 0.10:
             return ("raise", big_blind * 2)
 
