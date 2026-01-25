@@ -53,6 +53,21 @@ class HoldemGame:
             return HardAI()
         return EasyAI()
 
+    def _active_indexes(self):
+        return [i for i, p in enumerate(self.players) if not p.busted and p.chips > 0]
+
+    def _next_active_index(self, start_index: int, step: int):
+        n = len(self.players)
+        if n == 0:
+            return start_index
+        idx = start_index
+        for _ in range(n):
+            idx = (idx + step) % n
+            p = self.players[idx]
+            if not p.busted and p.chips > 0:
+                return idx
+        return start_index
+
     def _emit(self, msg: str):
         print(msg)
         if self.gui:
@@ -206,15 +221,23 @@ class HoldemGame:
         self._refresh_ui(to_call=0)
 
     def post_blinds(self):
-        n = len(self.players)
+        if self.players[self.dealer_index].busted or self.players[self.dealer_index].chips <= 0:
+            self.dealer_index = self._next_active_index(self.dealer_index, step=1)
+        active = self._active_indexes()
+        n = len(active)
+        if n == 0:
+            return
+        if n == 1:
+            self.state = GameState.END_HAND
+            return
         if n == 2:
             sb_index = self.dealer_index
-            bb_index = (self.dealer_index + 1) % n
+            bb_index = self._next_active_index(self.dealer_index, step=1)
             first_to_act = sb_index
         else:
-            sb_index = (self.dealer_index + 1) % n
-            bb_index = (self.dealer_index + 2) % n
-            first_to_act = (self.dealer_index + 3) % n
+            sb_index = self._next_active_index(self.dealer_index, step=1)
+            bb_index = self._next_active_index(sb_index, step=1)
+            first_to_act = self._next_active_index(bb_index, step=1)
 
         sbp = self.players[sb_index]
         bbp = self.players[bb_index]
@@ -248,6 +271,8 @@ class HoldemGame:
     def deal_hole_cards(self):
         for _ in range(2):
             for p in self.players:
+                if p.busted or p.chips <= 0:
+                    continue
                 p.hole_cards.append(self.deck.draw())
         self._refresh_ui(to_call=0)
         self.state = GameState.BETTING_PREFLOP
@@ -274,8 +299,8 @@ class HoldemGame:
         for p in self.players:
             p.current_bet = 0
 
-        # 2인: BB 먼저, 3인 이상: SB(딜러 왼쪽) 먼저
-        start_index = (self.dealer_index + 1) % n
+        # 카운터클럭 기준: 딜러 오른쪽부터 행동
+        start_index = self._next_active_index(self.dealer_index, step=1)
         self.betting = BettingRound(players=self.players, start_index=start_index, big_blind=self.big_blind)
         self.betting.current_bet = 0
 
@@ -489,28 +514,33 @@ class HoldemGame:
         self._refresh_ui(to_call=0)
 
     def end_hand(self):
-        # ?? ??? ??? ? ?? ???? ??
         if self.gui:
             self.gui.poker_screen.set_actions_enabled(False)
             self.gui.poker_screen.set_status_text("Next hand in 3s…")
 
         human = self.players[0]
         if human.chips <= 0:
+            human.busted = True
+            human.folded = True
+            human.all_in = True
+        for p in self.players[1:]:
+            if p.chips <= 0:
+                p.busted = True
+                p.folded = True
+                p.all_in = True
+        if human.chips <= 0:
             self.stop()
             if self.gui:
                 self.gui.poker_screen.show_game_over("AI")
             return
 
-        survivors = [human] + [p for p in self.players[1:] if p.chips > 0]
-        self.players = survivors
-
-        if len(self.players) == 1:
+        if all(p.busted or p.chips <= 0 for p in self.players[1:]):
             self.stop()
             if self.gui:
                 self.gui.poker_screen.show_game_over("Human")
             return
 
-        self.dealer_index = (self.dealer_index + 1) % len(self.players)
+        self.dealer_index = self._next_active_index(self.dealer_index, step=1)
 
         self._schedule_next_hand(delay_ms=3000)
 
