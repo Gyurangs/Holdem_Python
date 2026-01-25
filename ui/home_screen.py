@@ -20,7 +20,7 @@ class HomeScreen(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # ✅ 화이트/그레이 모던 테마
+        # 화이트/그레이 모던 테마
         self.setStyleSheet("""
             QWidget { background: #f4f6f9; color: #111827; font-family: Arial; }
 
@@ -105,21 +105,21 @@ class HomeScreen(QWidget):
             row.addStretch()
             card_layout.addLayout(row)
 
-        # ✅ AI 인원수(크게)
+        # AI 인원수
         self.ai_count_spin = QSpinBox()
         self.ai_count_spin.setRange(1, 4)
         self.ai_count_spin.setValue(1)
         self.ai_count_spin.setFixedWidth(240)
         add_row("AI Players", self.ai_count_spin)
 
-        # ✅ 난이도 기본 Normal
+        # 난이도 기본 Normal
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Easy", "Normal", "Hard"])
         self.diff_combo.setCurrentText("Normal")
         self.diff_combo.setFixedWidth(240)
         add_row("Difficulty", self.diff_combo)
 
-        # ✅ 시드머니 기본 1000
+        # 시드머니 기본 1000
         self.start_chips_spin = QSpinBox()
         self.start_chips_spin.setRange(100, 20000)
         self.start_chips_spin.setSingleStep(100)
@@ -127,7 +127,7 @@ class HomeScreen(QWidget):
         self.start_chips_spin.setFixedWidth(240)
         add_row("Start Chips", self.start_chips_spin)
 
-        # ✅ BB만 설정, SB = BB/2 자동
+        # BB만 설정, SB = BB/2 자동
         self.bb_spin = QSpinBox()
         self.bb_spin.setRange(2, 20000)
         self.bb_spin.setSingleStep(10)
@@ -162,7 +162,7 @@ class HomeScreen(QWidget):
         root.addSpacing(10)
         root.addLayout(btn_row)
 
-        # ✅ glow 적용(Home)
+        # glow 적용(Home)
         for w in (self.ai_count_spin, self.diff_combo, self.start_chips_spin, self.bb_spin, start_btn):
             w.installEventFilter(self._glow)
 

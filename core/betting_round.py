@@ -7,7 +7,7 @@ class BettingRound:
         self.turn_index = start_index
         self.last_raiser = None
 
-        # ✅ 각 플레이어가 이번 라운드에서 "행동을 했는지"
+        # 각 플레이어가 이번 라운드에서 "행동을 했는지"
         self.acted = {p: False for p in players}
 
     def next_player(self):
@@ -25,14 +25,14 @@ class BettingRound:
                 self.acted[p] = (p == raiser)
 
     def all_acted_or_all_in(self):
-        # ✅ 폴드 안 한 사람(올인 포함)
+        # 폴드 안 한 사람(올인 포함)
         non_folded = [p for p in self.players if not p.folded]
 
-        # ✅ 진짜로 한 명만 남았을 때(다른 사람들은 폴드)
+        # 진짜로 한 명만 남았을 때(다른 사람들은 폴드)
         if len(non_folded) <= 1:
             return True
 
-        # ✅ 올인 아닌 플레이어는
+        # 올인 아닌 플레이어는
         #    - 현재 베팅금액 맞췄고
         #    - 이번 라운드에서 acted=True 여야 종료
         for p in non_folded:
