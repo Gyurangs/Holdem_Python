@@ -1,29 +1,47 @@
 # Holdem_Python
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/f0b1031d-8308-472f-a34d-787127b10584" width="300" alt="Holdem Logo" />
+  <img src="https://github.com/user-attachments/assets/f0b1031d-8308-472f-a34d-787127b10584" width="400" alt="Holdem Logo" />
 </div>
 
-## 01. 프로젝트에 대한 정보
+**PySide6 (Qt)** 로 UI를 구성하고, **간결한 게임 루프 + AI 선택** 구조로 구현한 텍사스 홀덤 데스크톱 앱입니다.
 
-### (1) 프로젝트 제목
-- Holdem_Python
+---
 
-### (2) 프로젝트 정보 (개발 기간)
-- 2026.01.17 ~ 2026.01.25
+## 01. 프로젝트 개요
+- **프로젝트명**: Holdem_Python  
+- **개발 기간**: 2026.01.17 ~ 2026.01.25  
+- **한 줄 소개**: 사람 1명 + AI 플레이어가 대결하는 텍사스 홀덤 데스크톱 게임
 
-### (3) 프로젝트 소개
-- PySide6 기반의 데스크톱 텍사스 홀덤 게임입니다.
-- 1인(휴먼) + AI 플레이어로 기본 규칙을 빠르게 즐길 수 있습니다.
+## 02. 데모 시나리오 (발표 흐름)
+1) 홈 화면에서 **AI 인원 / 난이도 / 시작 칩 / 블라인드**를 설정  
+2) GAME START → 테이블 진입  
+3) **홀덤 진행**(프리플랍 → 플랍 → 턴 → 리버)  
+4) **액션 로그/말풍선**으로 진행 상황 확인  
+5) **게임 종료 → 홈으로 복귀**
 
-## 02. 요구 사항
+## 03. 핵심 기능
+- **게임 진행 UI**: 좌석 배치, 커뮤니티 카드, 팟/콜 금액 HUD
+- **AI 난이도 선택**: Easy / Normal / Hard
+- **블라인드 자동 계산**: BB 입력 시 SB 자동 반영
+- **액션 패널**: Fold / Call / Raise / All-in
+- **게임 중 종료**: 좌상단 Exit 버튼으로 홈 복귀
+- **액션 로그 & 말풍선**: 플레이어 행동 시각화
 
-- Python 3.10 이상 권장
-- Windows / macOS / Linux (PySide6 지원 환경)
-- 패키지: `requirements.txt` 참고
+## 04. 기본 설정값 (현재 코드 기준)
+- **AI 인원수**: 2명  
+- **난이도**: Hard  
+- **시작 칩**: 500  
+- **Big Blind**: 20 (SB는 자동으로 10)
 
-## 03. 설치 및 실행
+## 05. 조작 키
+- **F**: Fold  
+- **C**: Call  
+- **R**: Raise  
+- **A**: All-in  
+- **Esc**: Exit (홈으로 복귀)
 
+## 06. 실행 방법
 ```bash
 # 1) Repository clone
 git clone <YOUR_REPO_URL>
@@ -43,19 +61,17 @@ pip install -r requirements.txt
 python main.py
 ```
 
-환경변수: 없음
+## 07. 기술 스택
+- **Language**: Python 3.10+
+- **UI**: PySide6 (Qt)
+- **기타**: requirements.txt 참고
 
-## 04. 기술 스택
-
-- Language: Python
-- UI: PySide6 (Qt)
-- 기타: numpy, pandas, matplotlib, opencv-python, pillow
-
-## 05. 주요 기능
-
-- 텍사스 홀덤 기본 게임 진행(프리플랍~리버, 쇼다운)
-- AI 난이도(Easy / Normal / Hard) 선택
-- 블라인드 및 시작 칩 설정
-- 액션 로그 및 좌석 말풍선 표시
-- 키보드 단축키(F/C/R/A)
-
+## 08. 폴더 구조 요약
+```
+.
+├─ core/            # 게임 로직 및 상태
+├─ ui/              # PySide6 UI
+├─ assets/          # 카드 이미지
+├─ players/         # 플레이어/AI 관련
+└─ main.py          # 엔트리포인트
+```
