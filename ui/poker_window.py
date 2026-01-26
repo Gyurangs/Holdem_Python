@@ -460,12 +460,28 @@ class PokerWindow(QWidget):
         self.raise_spin.setSingleStep(10)
         self.raise_btn = QPushButton("RAISE")
         self.allin_btn = QPushButton("ALL-IN")
-
         action_layout.addWidget(self.fold_btn)
         action_layout.addWidget(self.call_btn)
         action_layout.addWidget(self.raise_spin)
         action_layout.addWidget(self.raise_btn)
         action_layout.addWidget(self.allin_btn)
+
+        self.exit_btn = QPushButton("EXIT", self.table_surface)
+        self.exit_btn.setFixedSize(64, 26)
+        self.exit_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(0,0,0,160);
+                border: 1px solid rgba(255,255,255,45);
+                border-radius: 10px;
+                color: rgba(255,255,255,220);
+                font-weight: 800;
+                font-size: 11px;
+                padding: 2px 6px;
+            }
+            QPushButton:hover { background-color: rgba(0,0,0,190); }
+            QPushButton:pressed { background-color: rgba(0,0,0,140); }
+            QPushButton:disabled { color: rgba(255,255,255,120); border-color: rgba(255,255,255,25); }
+        """)
 
     def _install_glow(self):
                            
@@ -489,6 +505,8 @@ class PokerWindow(QWidget):
         self.action_panel.setFixedWidth(panel_w)
         self.action_panel.adjustSize()
         self.action_panel.move(w // 2 - self.action_panel.width() // 2, h - self.action_panel.height() - 14)
+
+        self.exit_btn.move(12, 12)
 
     def configure_table(self, num_players: int):
         self.num_players = max(2, min(5, int(num_players)))
@@ -580,12 +598,14 @@ class PokerWindow(QWidget):
         self.call_btn.clicked.connect(lambda: self.human_action.set("call"))
         self.raise_btn.clicked.connect(lambda: self.human_action.set("raise", self.raise_spin.value()))
         self.allin_btn.clicked.connect(self.all_in)
+        self.exit_btn.clicked.connect(self.confirm_exit)
 
     def _install_shortcuts(self):
         QShortcut(QKeySequence("F"), self, activated=lambda: self.fold_btn.click())
         QShortcut(QKeySequence("C"), self, activated=lambda: self.call_btn.click())
         QShortcut(QKeySequence("R"), self, activated=lambda: self.raise_btn.click())
         QShortcut(QKeySequence("A"), self, activated=lambda: self.allin_btn.click())
+        QShortcut(QKeySequence("Esc"), self, activated=lambda: self.exit_btn.click())
 
     def highlight_current_seat(self, player_name: str):
         for s in self.seats:
@@ -601,6 +621,16 @@ class PokerWindow(QWidget):
         self.raise_btn.setEnabled(enabled)
         self.allin_btn.setEnabled(enabled)
         self.raise_spin.setEnabled(enabled)
+        self.exit_btn.setEnabled(enabled)
+
+    def confirm_exit(self):
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Exit Game")
+        msg.setText("Exit the current game and return to Home?")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        ret = msg.exec()
+        if ret == QMessageBox.Ok and self.go_home_callback:
+            self.go_home_callback()
 
     def all_in(self):
         amount = self.get_player_chips()

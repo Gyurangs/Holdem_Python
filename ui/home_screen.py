@@ -125,14 +125,14 @@ class HomeScreen(QWidget):
                 
         self.ai_count_spin = QSpinBox()
         self.ai_count_spin.setRange(1, 4)
-        self.ai_count_spin.setValue(1)
+        self.ai_count_spin.setValue(2)
         self.ai_count_spin.setFixedWidth(240)
         add_row("AI Players", self.ai_count_spin)
 
                        
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Easy", "Normal", "Hard"])
-        self.diff_combo.setCurrentText("Normal")
+        self.diff_combo.setCurrentText("Hard")
         self.diff_combo.setFixedWidth(240)
         add_row("Difficulty", self.diff_combo)
 
@@ -140,7 +140,7 @@ class HomeScreen(QWidget):
         self.start_chips_spin = QSpinBox()
         self.start_chips_spin.setRange(100, 20000)
         self.start_chips_spin.setSingleStep(100)
-        self.start_chips_spin.setValue(1000)
+        self.start_chips_spin.setValue(500)
         self.start_chips_spin.setFixedWidth(240)
         add_row("Start Chips", self.start_chips_spin)
 
